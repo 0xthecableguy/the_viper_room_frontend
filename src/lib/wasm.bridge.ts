@@ -5,6 +5,8 @@ declare global {
 		initDB: () => Promise<void>;
 		saveUserSession: (userId: bigint, data: Uint8Array) => Promise<void>;
 		getUserSession: (userId: bigint) => Promise<ArrayBuffer | null>;
+		deleteUserSession: (userId: bigint) => Promise<void>;
+		checkSessionExists: (userId: bigint) => Promise<boolean>;
 	}
 }
 
@@ -18,4 +20,11 @@ if (typeof window !== 'undefined') {
 
 	window.getUserSession = (userId: bigint) =>
 		userDataStorage.getSession(userId);
+
+	window.deleteUserSession = (userId: bigint) =>
+		userDataStorage.deleteSession(userId);
+
+	window.checkSessionExists = (userId: bigint) =>
+		userDataStorage.sessionExists(userId);
+
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import textContent from '../../../static/personal_data_security_policy.txt?raw';
 	export let show: boolean;
 	export let onClose: () => void;
 
@@ -35,7 +36,7 @@
 				</button>
 			</div>
 			<div class="modal-body">
-				<p>Ваши данные в безопасности</p>
+				<p>{textContent}</p>
 			</div>
 		</div>
 	</div>

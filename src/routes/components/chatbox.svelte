@@ -4,13 +4,16 @@
 
 	export let user: { id: number; username: string };
 	export let avatarUrl: string | null;
+	// eslint-disable-next-line svelte/valid-compile
 	export let serverAvatarUrl: string | null;
 	export let messages: Array<{ type: "user" | "server"; text: string }>;
 	export let buttons: string[];
 	export let actionButtons: string[];
 	export let canInput: boolean;
+	export let sessionData: ArrayBuffer | undefined;
 
 	let inputMessage: string = "";
+	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
 	async function handleSendMessage() {
 		if (!inputMessage.trim()) return;
@@ -19,7 +22,12 @@
 
 		try {
 
-			const serverResponse = await sendMessageToServer(user.id, inputMessage, user.username);
+			const serverResponse = await sendMessageToServer({
+				user_id: user.id,
+				username: user.username,
+				action: inputMessage,
+				session_data: sessionData || EMPTY_SESSION_DATA
+			});
 
 			messages = [...messages, { type: "server", text:serverResponse.message }];
 
@@ -37,7 +45,14 @@
 
 	async function handleButtonClick(buttonText: string) {
 		try {
-			const response = await sendMessageToServer(user.id, buttonText, user.username);
+			const response = await sendMessageToServer(
+				{
+					user_id: user.id,
+					username: user.username,
+					action: buttonText,
+					session_data: sessionData || EMPTY_SESSION_DATA
+				}
+			);
 
 			messages = [...messages,
 				{ type: "user", text: buttonText },
@@ -59,7 +74,7 @@
 			<div class="message-row {message.type}">
 				{#if message.type === "server"}
 					<div class="message server-message">
-						<img src={serverAvatarUrl} alt="Server" class="avatar"/>
+<!--						<img src={serverAvatarUrl} alt="Server" class="avatar"/>-->
 						<div class="message-text">{message.text}</div>
 					</div>
 				{:else}

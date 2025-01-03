@@ -1,25 +1,21 @@
-export interface ServerResponse {
-	action_buttons: string[];
-	message: string;
-	buttons: string[];
-	can_input: boolean;
-	avatar_url?: string;
-}
+import type { WizardPiUserActionPayload, WizardPiServerResponse } from '../types';
 
-export const sendMessageToServer = async (userId: number, message: string, username: string, sessionData?: ArrayBuffer): Promise<ServerResponse> => {
-	console.log('Sending message:', message, 'from user:', username, 'with userId:', userId, 'to server');
+export const sendMessageToServer = async (
+	payload: WizardPiUserActionPayload
+): Promise<WizardPiServerResponse> => {
+	console.log('Sending payload to server:', payload);
+
+	const modifiedPayload = {
+		...payload,
+		session_data: Array.from(new Uint8Array(payload.session_data))
+	};
 
 	const response = await fetch('https://v3.spb.ru/wizard_pi_user_action', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		body: JSON.stringify({
-			user_id: userId,
-			username: username,
-			action: message,
-			session_data: sessionData ? Array.from(new Uint8Array(sessionData)) : []
-		}),
+		body: JSON.stringify(modifiedPayload),
 	});
 
 	console.log("Response status:", response.status);

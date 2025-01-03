@@ -33,6 +33,7 @@ export class UserDataStorage {
 		const store = transaction.objectStore("userSessions");
 
 		return new Promise<void>((resolve, reject) => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const request = store.put(sessionData, userId.toString());
 
 			transaction.oncomplete = () => {
@@ -78,6 +79,7 @@ export class UserDataStorage {
 		const store = transaction.objectStore("userSessions");
 
 		return new Promise((resolve, reject) => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const request = store.delete(userId.toString());
 
 			transaction.oncomplete = () => {
