@@ -1,20 +1,25 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import '../lib/wasm.bridge';
-	import { userDataStorage } from '@services/db.service.js';
 	import type { SessionManager as SessionManagerType } from 'wizard-pi-wasm';
 	import init, { SessionManager } from 'wizard-pi-wasm';
-	import { sendMessageToServer } from "@services/api.js";
+	import { sendMessageToServer } from '@services/api.js';
 	import ChatBox from '@components/chatbox.svelte';
+	import AuthBox from '@components/authbox.svelte';
 	import Modal from '@components/Modal.svelte';
+	import { ActionStep, type WizardPiServerResponse } from '../types';
 
 	let user: TelegramUser | null = null;
 	let avatarUrl: string | null = null;
 	let isChatVisible: boolean = false;
+	let isAuthVisible = false;
 	let testUserAvatarUrl: string | null = "https://i.ibb.co/DzMYg1f/alien-head-v2.webp";
 	let serverAvatarUrl: string | null = "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png"
 	let sessionManager: SessionManagerType;
 	let showSecurityPolicyModal = false;
+	let sessionData: ArrayBuffer | undefined;
+
+	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
 	type Message = {
 		type: "user" | "server";
@@ -31,10 +36,6 @@
 		await initWasm();
 		console.log("Wasm module initialized!");
 
-		// // Upload session file to IndexedDB;
-		// const user_id_of_uploading_session = 7543812650;
-		// await dev_mode_session_upload(sessionManager, user_id_of_uploading_session);
-
 		try {
 			console.log('App mounted. Trying to initialize user...');
 			await initializeUser();
@@ -47,6 +48,7 @@
 		await init();
 		sessionManager = new SessionManager();
 		await sessionManager.initialize();
+		console.log("Session IndexedDB manager initialized!");
 	}
 
 	const initializeUser = async () => {
@@ -66,7 +68,12 @@
 						return;
 					}
 
-					const serverResponse = await sendMessageToServer(user.id, "Mini-app initialized", user.username, sessionData);
+					const serverResponse = await sendMessageToServer({
+						user_id: user.id,
+						username: user.username,
+						action_step: ActionStep.MINI_APP_INITIALIZED,
+						session_data: sessionData || EMPTY_SESSION_DATA
+					});
 
 					if (success && serverResponse.message === "Congrats! You're authorized! Check out your options below") {
 						console.log("Client is authorized and ready for use");
@@ -113,7 +120,12 @@
 			return;
 		}
 
-		const serverResponse = await sendMessageToServer(user.id, "Mini-app initialized", user.username, sessionData);
+		const serverResponse = await sendMessageToServer({
+			user_id: user.id,
+			username: user.username,
+			action_step: ActionStep.MINI_APP_INITIALIZED,
+			session_data: sessionData || EMPTY_SESSION_DATA
+		});
 
 		if (success && serverResponse.message === "Congrats! You're authorized! Check out your options below") {
 			console.log("Client is authorized and ready for use");
@@ -135,50 +147,18 @@
 		return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
 	}
 
-	const handleLogin = async () => {
-		if (user) {
-			isChatVisible = true;
+	const handleLogin = () => {
+		isAuthVisible = true;
+	};
 
-			try {
-				const serverResponse = await sendMessageToServer(user.id, "Login attempt. Step 1", user.username);
+	const handleAuthSuccess = (serverResponse: WizardPiServerResponse) => {
+		isAuthVisible = false;
+		isChatVisible = true;
 
-				messages = [...messages, { type: "server", text: serverResponse.message }];
-
-				if (serverResponse.message === "Please provide your phone number") {
-					console.log("Server requesting phone number");
-					buttons = serverResponse.buttons;
-					actionButtons = serverResponse.action_buttons;
-					canInput = serverResponse.can_input;
-
-				}
-				else if (serverResponse.message === "Please provide the code sent to your phone") {
-					console.log("Server requesting verification code");
-					buttons = serverResponse.buttons;
-					actionButtons = serverResponse.action_buttons;
-					canInput = serverResponse.can_input;
-
-				}
-				else if (serverResponse.message === "Please provide 2FA password") {
-					console.log("Server requesting 2FA password");
-					buttons = serverResponse.buttons;
-					actionButtons = serverResponse.action_buttons;
-					canInput = serverResponse.can_input;
-
-				}
-				else {
-					console.log("Unexpected server response:", serverResponse.message);
-					buttons = serverResponse.buttons;
-					actionButtons = serverResponse.action_buttons;
-					canInput = serverResponse.can_input;
-				}
-			} catch (error) {
-				console.error("Error during login attempt:", error);
-				messages = [...messages, {
-					type: "server",
-					text: "Error occurred during login. Please try again."
-				}];
-			}
-		}
+		messages = [{ type: "server", text: serverResponse.message }];
+		buttons = serverResponse.buttons;
+		actionButtons = serverResponse.action_buttons;
+		canInput = serverResponse.can_input;
 	};
 
 	const handlePolicyView = () => {
@@ -191,23 +171,26 @@
 
 	async function extract_session_data_from_db(userId: bigint): Promise<{ success: boolean; data?: ArrayBuffer }> {
 		try {
-			const sessionExists = await userDataStorage.sessionExists(userId);
+			const sessionExists = await sessionManager.session_exists(userId);
 			if (!sessionExists) {
-				console.log(`No session file found for user ${userId}`);
+				console.log(`No session file found in IndexedDB for user: ${userId}`);
 				return { success: false };
 			}
 
-			console.log(`Session file found for user ${userId}`);
-			const sessionData = await userDataStorage.getSession(userId);
+			console.log(`Session file found in IndexedDB for user: ${userId}`);
+			const sessionData = await sessionManager.get_session(userId);
 
 			if (!sessionData) {
-				console.log(`Failed to extract session data for user ${userId}`);
+				console.log(`Failed to extract session data from IndexedDB for user: ${userId}`);
 				return { success: false };
 			}
 
-			return { success: true, data: sessionData };
+			const uint8Array = new Uint8Array(sessionData);
+			const arrayBuffer = uint8Array.buffer;
+
+			return { success: true, data: arrayBuffer };
 		} catch (error) {
-			console.error(`Error extracting session data: ${error}`);
+			console.error(`Error extracting session data from IndexedDB: ${error}`);
 			return { success: false };
 		}
 	}
@@ -215,7 +198,21 @@
 
 <div class="main-container">
 	{#if user}
-		{#if isChatVisible}
+		{#if isAuthVisible}
+			<div class="header">
+				<h1>Welcome to the wizard Pi mini-app</h1>
+				<p>This is the authentication page</p>
+			</div>
+
+			<div class="auth-container">
+				<AuthBox
+					{user}
+					{avatarUrl}
+					{sessionManager}
+					onAuthSuccess={handleAuthSuccess}
+				/>
+			</div>
+		{:else if isChatVisible}
 			<div class="header">
 				<h1>Welcome to the wizard Pi mini-app</h1>
 				<p>This is the main page of the App</p>
@@ -230,6 +227,7 @@
 					{buttons}
 					{actionButtons}
 					{canInput}
+					{sessionData}
 				/>
 			</div>
 		{:else}
@@ -273,7 +271,7 @@
         box-sizing: border-box;
         background-image: url("/background.jpeg");
         background-size: cover;
-        background-position: center;
+        background-position: top;
     }
 
     .header {
@@ -315,10 +313,10 @@
         border-color: rgba(255, 255, 255, 0.3);
     }
 
-    .chat-container {
-				width: 85vw;
+    .chat-container, .auth-container {
+        width: 85vw;
         height: 75vh;
-				max-width: 600px;
+        max-width: 600px;
         background: rgba(255, 255, 255, 0.1);
         border-radius: 15px;
     }
