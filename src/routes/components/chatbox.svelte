@@ -1,6 +1,8 @@
 <script lang="ts">
-	import './chatbox.svelte.css';
+	import './shared-styles.svelte.css';
 	import { sendMessageToServer } from "@services/api.js";
+	import { ActionStep, AuthStage } from '../../types';
+	import type { SessionManager } from 'wizard-pi-wasm';
 
 	export let user: { id: number; username: string };
 	export let avatarUrl: string | null;
@@ -11,8 +13,11 @@
 	export let actionButtons: string[];
 	export let canInput: boolean;
 	export let sessionData: ArrayBuffer | undefined;
+	export let sessionManager: SessionManager;
+	export let onSignOut: () => void;
 
 	let inputMessage: string = "";
+
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
 	async function handleSendMessage() {
@@ -45,14 +50,21 @@
 
 	async function handleButtonClick(buttonText: string) {
 		try {
-			const response = await sendMessageToServer(
-				{
+			const payload = buttonText === "Sign-out"
+				? {
+					user_id: user.id,
+					username: user.username,
+					action_step: ActionStep.SIGN_OUT,
+					session_data: sessionData || EMPTY_SESSION_DATA
+				}
+				: {
 					user_id: user.id,
 					username: user.username,
 					action: buttonText,
 					session_data: sessionData || EMPTY_SESSION_DATA
-				}
-			);
+				};
+
+			const response = await sendMessageToServer(payload);
 
 			messages = [...messages,
 				{ type: "user", text: buttonText },
@@ -62,13 +74,26 @@
 			buttons = response.buttons;
 			actionButtons = response.action_buttons;
 			canInput = response.can_input;
+
+			if (response.stage === AuthStage.SignedOut) {
+				try {
+					const exists = await sessionManager.session_exists(BigInt(user.id));
+					if (exists) {
+						await sessionManager.delete_session(BigInt(user.id));
+						console.log("Session successfully deleted after sign-out command from user");
+						onSignOut();
+					}
+				} catch (error) {
+					console.error("Error handling session deletion after sign-out command from user:", error);
+				}
+			}
 		} catch (error) {
 			console.error('Error handling button click:', error);
 		}
 	}
 </script>
 
-<div class="chat-container">
+<div class="container">
 	<div class="messages-container">
 		{#each messages as message}
 			<div class="message-row {message.type}">

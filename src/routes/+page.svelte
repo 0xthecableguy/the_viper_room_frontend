@@ -6,8 +6,10 @@
 	import { sendMessageToServer } from '@services/api.js';
 	import ChatBox from '@components/chatbox.svelte';
 	import AuthBox from '@components/authbox.svelte';
-	import Modal from '@components/Modal.svelte';
-	import { ActionStep, type WizardPiServerResponse } from '../types';
+	import Modal from '@components/modal.svelte';
+	import type { TelegramUser } from '../types';
+	import { ActionStep, AuthStage, type Message, type WizardPiServerResponse } from '../types';
+	import { extract_session_data_from_db } from '@services/db.utils';
 
 	let user: TelegramUser | null = null;
 	let avatarUrl: string | null = null;
@@ -19,22 +21,16 @@
 	let showSecurityPolicyModal = false;
 	let sessionData: ArrayBuffer | undefined;
 
-	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
-
-	type Message = {
-		type: "user" | "server";
-		text: string;
-		avatarUrl?: string | null;
-	};
-
 	let messages: Message[] = [];
 	let buttons: string[] = [];
 	let actionButtons: string[] = [];
 	let canInput: boolean = true;
 
+	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
+
 	onMount(async () => {
 		await initWasm();
-		console.log("Wasm module initialized!");
+		console.log("Wasm module initialized");
 
 		try {
 			console.log('App mounted. Trying to initialize user...');
@@ -48,7 +44,7 @@
 		await init();
 		sessionManager = new SessionManager();
 		await sessionManager.initialize();
-		console.log("Session IndexedDB manager initialized!");
+		console.log("IndexedDB session manager initialized");
 	}
 
 	const initializeUser = async () => {
@@ -56,15 +52,15 @@
 			if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
 				const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
 				if (telegramUser && telegramUser.id) {
-
 					user = telegramUser;
-					console.log("User initialized:", user);
+					console.log("Telegram user initialized:", user);
+
 					avatarUrl = await fetchAvatarUrl(user.id);
 
-					const { success, data: sessionData } = await extract_session_data_from_db(BigInt(user.id));
+					const { success, data: sessionData } = await extract_session_data_from_db(sessionManager, BigInt(user.id));
 
 					if (!success) {
-						console.log("Failed to extract user's session from local db. User should log in first");
+						console.log("Failed to extract user's session from IndexedDB. User should log in first");
 						return;
 					}
 
@@ -75,8 +71,8 @@
 						session_data: sessionData || EMPTY_SESSION_DATA
 					});
 
-					if (success && serverResponse.message === "Congrats! You're authorized! Check out your options below") {
-						console.log("Client is authorized and ready for use");
+					if (success && serverResponse.stage === AuthStage.MiniAppInitConfirmed) {
+						console.log("Telegram client is authorized and ready for use");
 						isChatVisible = true;
 
 						messages = [{ type: "server", text: serverResponse.message }];
@@ -85,11 +81,11 @@
 						canInput = serverResponse.can_input;
 						avatarUrl = avatarUrl;
 					} else {
-						console.log("Client is NOT authorized");
+						console.log("Telegram client is NOT authorized");
 						console.log("Server response:", serverResponse.message);
 					}
 				} else {
-					console.error("No real user data found in Telegram WebApp | Initializing test user for dev mode");
+					console.error("No real user found in Telegram WebApp window | Trying to initialize test user for dev mode");
 					await initializeTestUser();
 				}
 			} else {
@@ -97,7 +93,7 @@
 				await initializeTestUser();
 			}
 		} catch (error) {
-			console.error("Error in initializing user fn:", error);
+			console.error("Global error in initializing user fn:", error);
 		}
 	};
 
@@ -108,15 +104,15 @@
 			first_name: "Test",
 			last_name: "User",
 		};
-
 		user = testUser;
-		console.log("Test user initialized:", user.id, user.username);
+		console.log("Test user initialized:", testUser);
+
 		avatarUrl = testUserAvatarUrl;
 
-		const { success, data: sessionData } = await extract_session_data_from_db(BigInt(user.id));
+		const { success, data: sessionData } = await extract_session_data_from_db(sessionManager, BigInt(user.id));
 
 		if (!success) {
-			console.log("Failed to extract user's session from local db: user should log in first");
+			console.log("Failed to extract test user's session from IndexedDB. Test user must be logged in first");
 			return;
 		}
 
@@ -127,8 +123,8 @@
 			session_data: sessionData || EMPTY_SESSION_DATA
 		});
 
-		if (success && serverResponse.message === "Congrats! You're authorized! Check out your options below") {
-			console.log("Client is authorized and ready for use");
+		if (success && serverResponse.stage === AuthStage.MiniAppInitConfirmed) {
+			console.log("Telegram client is authorized and ready for use");
 			isChatVisible = true;
 
 			messages = [{ type: "server", text: serverResponse.message }];
@@ -137,7 +133,7 @@
 			canInput = serverResponse.can_input;
 			avatarUrl = avatarUrl;
 		} else {
-			console.log("Client is NOT authorized");
+			console.log("Telegram client is NOT authorized");
 			console.log("Server response:", serverResponse.message);
 		}
 	}
@@ -161,6 +157,10 @@
 		canInput = serverResponse.can_input;
 	};
 
+	const handleSignOut = () => {
+		isChatVisible = false;
+	};
+
 	const handlePolicyView = () => {
 		showSecurityPolicyModal = true;
 	};
@@ -169,39 +169,14 @@
 		showSecurityPolicyModal = false;
 	};
 
-	async function extract_session_data_from_db(userId: bigint): Promise<{ success: boolean; data?: ArrayBuffer }> {
-		try {
-			const sessionExists = await sessionManager.session_exists(userId);
-			if (!sessionExists) {
-				console.log(`No session file found in IndexedDB for user: ${userId}`);
-				return { success: false };
-			}
-
-			console.log(`Session file found in IndexedDB for user: ${userId}`);
-			const sessionData = await sessionManager.get_session(userId);
-
-			if (!sessionData) {
-				console.log(`Failed to extract session data from IndexedDB for user: ${userId}`);
-				return { success: false };
-			}
-
-			const uint8Array = new Uint8Array(sessionData);
-			const arrayBuffer = uint8Array.buffer;
-
-			return { success: true, data: arrayBuffer };
-		} catch (error) {
-			console.error(`Error extracting session data from IndexedDB: ${error}`);
-			return { success: false };
-		}
-	}
 </script>
 
 <div class="main-container">
 	{#if user}
 		{#if isAuthVisible}
 			<div class="header">
-				<h1>Welcome to the wizard Pi mini-app</h1>
-				<p>This is the authentication page</p>
+				<h1>This is an authentication page</h1>
+				<p>Please provide the data you will be asked for to be logged-in<br>To be sure it's safe, check "Account security policy" at the main page of the App</p>
 			</div>
 
 			<div class="auth-container">
@@ -215,7 +190,7 @@
 		{:else if isChatVisible}
 			<div class="header">
 				<h1>Welcome to the wizard Pi mini-app</h1>
-				<p>This is the main page of the App</p>
+				<p>Your Personal Info Wizard that keeps you always up to date</p>
 			</div>
 
 			<div class="chat-container">
@@ -228,16 +203,22 @@
 					{actionButtons}
 					{canInput}
 					{sessionData}
+					{sessionManager}
+					onSignOut={handleSignOut}
 				/>
 			</div>
 		{:else}
 			<div class="buttons-container">
-				<button class="action-button" on:click={handleLogin}>
-					login
-				</button>
-				<button class="action-button" on:click={handlePolicyView}>
-					account security
-				</button>
+				<div class="main-button-container">
+					<button class="login-button" on:click={handleLogin}>
+						START
+					</button>
+				</div>
+				<div class="bottom-button-container">
+					<button class="policy-button" on:click={handlePolicyView}>
+						account security<br>policy
+					</button>
+				</div>
 			</div>
 		{/if}
 	{:else}
@@ -261,7 +242,7 @@
         font-family: 'Questrial', sans-serif;
     }
 
-		.main-container {
+    .main-container {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -275,42 +256,99 @@
     }
 
     .header {
-        text-align: center;
-        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
         margin-bottom: 2rem;
+        flex-direction: column;
+        align-self: center;
+        align-content: center;
+        background: rgba(227, 227, 222, 0.6);
     }
 
     .header h1 {
         font-size: 24px;
-        margin-bottom: 8px;
+        /*margin-bottom: 8px;*/
+        text-align: center;
+        color: rgba(62, 73, 101, 1);
+        font-family: 'Syne Mono', monospace;
     }
 
     .header p {
+        width: 100%;
+				text-align: center;
         font-size: 16px;
-        opacity: 0.8;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 600px;
+        align-items: center;
+				align-self: center;
+				align-content: center;
+        color: rgba(38, 37, 43, 0.8);
+        font-family: 'Questrial', monospace;
+				margin-bottom: 8px;
     }
 
     .buttons-container {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        align-items: center;
+        height: 100%;
+        position: relative;
     }
 
-    .action-button {
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid rgba(255, 255, 255, 0.2);
+    .main-button-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 15vh;
+    }
+
+    .bottom-button-container {
+        padding-bottom: 3rem;
+    }
+
+    .login-button {
+        background: rgba(38, 37, 43, 0.7);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         color: white;
-        padding: 15px 30px;
-        border-radius: 10px;
-        font-size: 16px;
+        padding: 20px 40px;
+        border-radius: 15px;
+        font-size: 24px;
         cursor: pointer;
         transition: all 0.3s ease;
-        min-width: 200px;
+        min-width: 220px;
+        font-family: 'Syne Mono', monospace;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    .action-button:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
+    .login-button:hover {
+        background: rgba(38, 37, 43, 0.85);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .policy-button {
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: rgba(38, 37, 43, 0.9);
+        padding: 12px 25px;
+        border-radius: 12px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 250px;
+        font-family: 'Syne Mono', monospace;
+        backdrop-filter: blur(5px);
+    }
+
+    .policy-button:hover {
+        background: rgba(255, 255, 255, 0.4);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: rgba(38, 37, 43, 1);
     }
 
     .chat-container, .auth-container {

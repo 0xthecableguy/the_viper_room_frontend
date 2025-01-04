@@ -1,5 +1,5 @@
 <script lang="ts">
-	import './authbox.svelte.css';
+	import './shared-styles.svelte.css';
 	import { sendMessageToServer } from "@services/api.js";
 	import type { SessionManager } from 'wizard-pi-wasm';
 
@@ -119,7 +119,7 @@
 	}
 </script>
 
-<div class="auth-container">
+<div class="container">
 	<div class="messages-container">
 		{#each messages as message}
 			<div class="message-row {message.type}">
