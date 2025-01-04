@@ -3,7 +3,7 @@ import type { WizardPiUserActionPayload, WizardPiServerResponse } from '../types
 export const sendMessageToServer = async (
 	payload: WizardPiUserActionPayload
 ): Promise<WizardPiServerResponse> => {
-	console.log('Sending payload to server:', payload);
+	console.log('Sending request payload to server:', payload);
 
 	const modifiedPayload = {
 		...payload,
@@ -18,14 +18,14 @@ export const sendMessageToServer = async (
 		body: JSON.stringify(modifiedPayload),
 	});
 
-	console.log("Response status:", response.status);
+	console.log("Server response status:", response.status);
 
 	if (!response.ok) {
 		throw new Error('Network Error');
 	}
 
 	const data = await response.json();
-	console.log("Response data:", data);
+	console.log("Server response data:", data);
 	return data;
 };
 
@@ -38,7 +38,7 @@ export const fetchAvatarUrl = async (userId: number): Promise<string | null> => 
 			},
 		});
 		console.log("Fetching avatar URL:", `https://v3.spb.ru/get_user_avatar?user_id=${userId}`);
-		console.log("Avatar fetch response status:", response.status);
+		console.log("Avatar fetch server response status:", response.status);
 		if (!response.ok) {
 			throw new Error('Failed to fetch avatar');
 		}
