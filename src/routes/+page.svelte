@@ -10,13 +10,15 @@
 	import type { TelegramUser } from '../types';
 	import { ActionStep, AuthStage, type Message, type WizardPiServerResponse } from '../types';
 	import { extract_session_data_from_db } from '@services/db.utils';
+	import { IMAGES } from '../constants';
+	import { fetchAvatarUrl } from '@services/api.js';
 
 	let user: TelegramUser | null = null;
 	let avatarUrl: string | null = null;
 	let isChatVisible: boolean = false;
 	let isAuthVisible = false;
-	let testUserAvatarUrl: string | null = "https://i.ibb.co/DzMYg1f/alien-head-v2.webp";
-	let serverAvatarUrl: string | null = "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png"
+	let testUserAvatarUrl: string | null = IMAGES.AVATARS.TEST_USER;
+	// let serverAvatarUrl: string | null = IMAGES.AVATARS.SERVER;
 	let sessionManager: SessionManagerType;
 	let showSecurityPolicyModal = false;
 	let sessionData: ArrayBuffer | undefined;
@@ -49,99 +51,67 @@
 
 	const initializeUser = async () => {
 		try {
-			if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
-				const telegramUser = window.Telegram.WebApp.initDataUnsafe.user;
-				if (telegramUser && telegramUser.id) {
-					user = telegramUser;
-					console.log("Telegram user initialized:", user);
 
-					avatarUrl = await fetchAvatarUrl(user.id);
+			let currentUser: TelegramUser;
+			let userAvatarUrl: string | null;
 
-					const { success, data: sessionData } = await extract_session_data_from_db(sessionManager, BigInt(user.id));
-
-					if (!success) {
-						console.log("Failed to extract user's session from IndexedDB. User should log in first");
-						return;
-					}
-
-					const serverResponse = await sendMessageToServer({
-						user_id: user.id,
-						username: user.username,
-						action_step: ActionStep.MINI_APP_INITIALIZED,
-						session_data: sessionData || EMPTY_SESSION_DATA
-					});
-
-					if (success && serverResponse.stage === AuthStage.MiniAppInitConfirmed) {
-						console.log("Telegram client is authorized and ready for use");
-						isChatVisible = true;
-
-						messages = [{ type: "server", text: serverResponse.message }];
-						buttons = serverResponse.buttons;
-						actionButtons = serverResponse.action_buttons;
-						canInput = serverResponse.can_input;
-						avatarUrl = avatarUrl;
-					} else {
-						console.log("Telegram client is NOT authorized");
-						console.log("Server response:", serverResponse.message);
-					}
-				} else {
-					console.error("No real user found in Telegram WebApp window | Trying to initialize test user for dev mode");
-					await initializeTestUser();
-				}
+			if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+				currentUser = window.Telegram.WebApp.initDataUnsafe.user;
+				userAvatarUrl = await fetchAvatarUrl(currentUser.id);
+				console.log("Telegram user initialized:", currentUser);
 			} else {
-				console.error("App mounted outside of Telegram WebApp | Dev mode only");
-				await initializeTestUser();
+				currentUser = {
+					id: 7543812650,
+					username: "test_user",
+					first_name: "Test",
+					last_name: "User",
+				};
+				userAvatarUrl = testUserAvatarUrl;
+				console.log("Test user initialized:", currentUser);
 			}
+
+			user = currentUser;
+			avatarUrl = userAvatarUrl;
+
+			const { success, data: sessionData } = await extract_session_data_from_db(sessionManager, BigInt(user.id));
+
+			if (!success) {
+				console.log(`Failed to extract ${user.username}'s session from IndexedDB. User must be logged in first`);
+				return;
+			}
+
+			const serverResponse = await sendMessageToServer({
+				user_id: user.id,
+				username: user.username,
+				user_first_name: user.first_name,
+				user_last_name: user.last_name,
+				action_step: ActionStep.MINI_APP_INITIALIZED,
+				session_data: sessionData || EMPTY_SESSION_DATA
+			});
+
+			if (success && serverResponse.stage === AuthStage.MiniAppInitConfirmed) {
+				console.log("Telegram client is authorized and ready for use");
+				isChatVisible = true;
+
+				messages = [{ type: "server", text: serverResponse.message }];
+				buttons = serverResponse.buttons;
+				actionButtons = serverResponse.action_buttons;
+				canInput = serverResponse.can_input;
+				avatarUrl = avatarUrl;
+			} else {
+				console.log("Telegram client is NOT authorized");
+				console.log("Server response:", serverResponse.message);
+			}
+
 		} catch (error) {
 			console.error("Global error in initializing user fn:", error);
 		}
 	};
 
-	async function initializeTestUser() {
-		let testUser: TelegramUser = {
-			id: 7543812650,
-			username: "test_user",
-			first_name: "Test",
-			last_name: "User",
-		};
-		user = testUser;
-		console.log("Test user initialized:", testUser);
-
-		avatarUrl = testUserAvatarUrl;
-
-		const { success, data: sessionData } = await extract_session_data_from_db(sessionManager, BigInt(user.id));
-
-		if (!success) {
-			console.log("Failed to extract test user's session from IndexedDB. Test user must be logged in first");
-			return;
-		}
-
-		const serverResponse = await sendMessageToServer({
-			user_id: user.id,
-			username: user.username,
-			action_step: ActionStep.MINI_APP_INITIALIZED,
-			session_data: sessionData || EMPTY_SESSION_DATA
-		});
-
-		if (success && serverResponse.stage === AuthStage.MiniAppInitConfirmed) {
-			console.log("Telegram client is authorized and ready for use");
-			isChatVisible = true;
-
-			messages = [{ type: "server", text: serverResponse.message }];
-			buttons = serverResponse.buttons;
-			actionButtons = serverResponse.action_buttons;
-			canInput = serverResponse.can_input;
-			avatarUrl = avatarUrl;
-		} else {
-			console.log("Telegram client is NOT authorized");
-			console.log("Server response:", serverResponse.message);
-		}
-	}
-
-	async function fetchAvatarUrl(userId: number): Promise<string | null> {
-		console.log("Fetching avatar url for user with id:", userId);
-		return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
-	}
+	// async function fetchAvatarUrl(userId: number): Promise<string | null> {
+	// 	console.log("Fetching avatar url for user with id:", userId);
+	// 	return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
+	// }
 
 	const handleLogin = () => {
 		isAuthVisible = true;
@@ -189,15 +159,14 @@
 			</div>
 		{:else if isChatVisible}
 			<div class="header">
-				<h1>Welcome to the wizard Pi mini-app</h1>
-				<p>Your Personal Info Wizard that keeps you always up to date</p>
+				<h1>Welcome to <span class="viper-text">the Viper room</span></h1>
+				<p>Your personal info wizard that keeps you always up to date</p>
 			</div>
 
 			<div class="chat-container">
 				<ChatBox
 					{user}
 					{avatarUrl}
-					{serverAvatarUrl}
 					{messages}
 					{buttons}
 					{actionButtons}
@@ -268,11 +237,11 @@
     }
 
     .header h1 {
-        font-size: 24px;
+        font-size: 16px;
         /*margin-bottom: 8px;*/
         text-align: center;
-        color: rgba(62, 73, 101, 1);
-        font-family: 'Syne Mono', monospace;
+        color: rgba(38, 37, 43, 0.8);
+        font-family: 'Questrial', monospace;
     }
 
     .header p {
@@ -289,6 +258,12 @@
         color: rgba(38, 37, 43, 0.8);
         font-family: 'Questrial', monospace;
 				margin-bottom: 8px;
+    }
+
+    .header .viper-text {
+        font-family: 'Permanent Marker', sans-serif;
+        color: rgba(62, 73, 101, 1);
+				font-size: 28px;
     }
 
     .buttons-container {
@@ -320,7 +295,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
         min-width: 220px;
-        font-family: 'Syne Mono', monospace;
+        font-family: 'Permanent Marker', sans-serif;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 

@@ -6,7 +6,9 @@ export enum ActionStep {
 
 export interface WizardPiUserActionPayload {
 	user_id: number;
-	username: string;
+	username?: string;
+	user_first_name?: string;
+	user_last_name?: string;
 	action?: string;
 	action_step?: ActionStep;
 	session_data: ArrayBuffer;
@@ -30,6 +32,7 @@ export interface WizardPiServerResponse {
 	avatar_url?: string;
 	session_data?: ArrayBuffer;
 	stage?: AuthStage
+	audio_data?: number[];
 }
 
 export interface TelegramUser {
@@ -50,4 +53,5 @@ export type Message = {
 	type: "user" | "server";
 	text: string;
 	avatarUrl?: string | null;
+	audioData?: number[];
 };
