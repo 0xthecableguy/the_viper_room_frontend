@@ -3,7 +3,7 @@
 	import { sendMessageToServer } from "@services/api.js";
 	import type { SessionManager } from 'wizard-pi-wasm';
 
-	export let user: { id: number; username: string };
+	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
 	export let sessionManager: SessionManager;
 	export let onAuthSuccess: (serverResponse: WizardPiServerResponse) => void;
@@ -29,6 +29,8 @@
 			const serverResponse = await sendMessageToServer({
 				user_id: user.id,
 				username: user.username,
+				user_first_name: user.first_name,
+				user_last_name: user.last_name,
 				action_step: ActionStep.LOGIN_START,
 				session_data: EMPTY_SESSION_DATA
 			});
@@ -60,6 +62,8 @@
 			const serverResponse = await sendMessageToServer({
 				user_id: user.id,
 				username: user.username,
+				user_first_name: user.first_name,
+				user_last_name: user.last_name,
 				action: messageToSend,
 				session_data: EMPTY_SESSION_DATA
 			});
@@ -75,6 +79,8 @@
 			const serverResponse = await sendMessageToServer({
 				user_id: user.id,
 				username: user.username,
+				user_first_name: user.first_name,
+				user_last_name: user.last_name,
 				action: buttonText,
 				session_data: EMPTY_SESSION_DATA
 			});

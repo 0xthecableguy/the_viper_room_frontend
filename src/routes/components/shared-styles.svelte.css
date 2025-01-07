@@ -37,7 +37,7 @@
 
 .message {
     max-width: 60%;
-    border-radius: 10px;
+    /*border-radius: 10px;*/
     color: rgba(38, 37, 43, 1);
     word-wrap: break-word;
     display: flex;
@@ -49,7 +49,7 @@
     background: rgba(255, 255, 255, 0.8);
     color: rgba(38, 37, 43, 1);
     border-radius: 18px 18px 0 18px;
-    padding: 10px;
+    padding: 15px;
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -58,8 +58,8 @@
 .server-message .message-text {
     background: rgba(228, 227, 222, 0.8);
     color: rgba(38, 37, 43, 1);
-    border-radius: 18px 18px 18px 0;
-    padding: 10px;
+    border-radius: 0px 18px 18px 18px;
+    padding: 15px;
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -165,4 +165,17 @@
     100% {
         background-position: 100% 100%;
     }
+}
+
+.audio-message {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.audio-message audio {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 8px 8px 8px 0px;
 }
