@@ -12,16 +12,17 @@
 	import { extract_session_data_from_db } from '@services/db.utils';
 	import { IMAGES } from '../constants';
 	import { fetchAvatarUrl } from '@services/api.js';
+	import { fade, scale } from 'svelte/transition';
 
 	let user: TelegramUser | null = null;
 	let avatarUrl: string | null = null;
 	let isChatVisible: boolean = false;
-	let isAuthVisible = false;
+	let isAuthVisible: boolean = false;
 	let testUserAvatarUrl: string | null = IMAGES.AVATARS.TEST_USER;
-	// let serverAvatarUrl: string | null = IMAGES.AVATARS.SERVER;
 	let sessionManager: SessionManagerType;
 	let showSecurityPolicyModal = false;
 	let sessionData: ArrayBuffer | undefined;
+	let showButtons: boolean = false;
 
 	let messages: Message[] = [];
 	let buttons: string[] = [];
@@ -39,6 +40,7 @@
 		try {
 			console.log('App mounted. Trying to initialize user...');
 			await initializeUser();
+			showButtons = true;
 		} catch (error) {
 			console.error('Error initializing any user:', error);
 		}
@@ -110,6 +112,7 @@
 		}
 	};
 
+	// // Hard-coded avatar fetch
 	// async function fetchAvatarUrl(userId: number): Promise<string | null> {
 	// 	console.log("Fetching avatar url for user with id:", userId);
 	// 	return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
@@ -179,18 +182,41 @@
 				/>
 			</div>
 		{:else}
-			<div class="buttons-container">
-				<div class="main-button-container">
-					<button class="login-button" on:click={handleLogin}>
-						START
-					</button>
+			{#if showButtons}
+				<div class="buttons-container"
+						 in:fade={{
+            duration: 300,
+            delay: 150
+          }}
+				>
+					<div class="main-button-container">
+						<button
+							class="login-button"
+							on:click={handleLogin}
+							in:scale={{
+                duration: 500,
+                delay: 600,
+                start: 0.95,
+                opacity: 0
+              }}
+						>
+							START
+						</button>
+					</div>
+					<div class="bottom-button-container">
+						<button
+							class="policy-button"
+							on:click={handlePolicyView}
+							in:fade={{
+                duration: 300,
+                delay: 300
+              }}
+						>
+							account security<br>policy
+						</button>
+					</div>
 				</div>
-				<div class="bottom-button-container">
-					<button class="policy-button" on:click={handlePolicyView}>
-						account security<br>policy
-					</button>
-				</div>
-			</div>
+			{/if}
 		{/if}
 	{:else}
 		<p class="loading">Loading...</p>

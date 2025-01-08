@@ -7,8 +7,6 @@
 
 	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
-	// export let serverAvatarUrl: string | null;
-	// export let messages: Array<{ type: "user" | "server"; text: string }>;
 	import type { Message } from '../../types';
 	export let buttons: string[];
 	export let actionButtons: string[];
@@ -55,16 +53,21 @@
 
 	async function handleButtonClick(buttonText: string) {
 		try {
-			const payload = buttonText === "Sign out"
-				? {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action_step: ActionStep.SIGN_OUT,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				}
-				: {
+			if (buttonText === "Get news!") {
+				messages = [...messages,
+					{ type: "user", text: buttonText },
+					{
+						type: "server",
+						text: "Записываю для тебя подкаст... \nдай мне пару минут, не закрывай приложение, но можешь его свернуть"
+					},
+					{
+						type: "server",
+						text: "...",
+						isLoading: true
+					}
+				];
+
+				const payload = {
 					user_id: user.id,
 					username: user.username,
 					user_first_name: user.first_name,
@@ -73,32 +76,82 @@
 					session_data: sessionData || EMPTY_SESSION_DATA
 				};
 
-			const response = await sendMessageToServer(payload);
+				const response = await sendMessageToServer(payload);
 
-			messages = [...messages,
-				{ type: "user", text: buttonText },
-				{
-					type: "server",
-					text: response.message,
-					audioData: response.audio_data
-				}
-			];
+				messages = messages
+					.filter(msg => !msg.isLoading && msg.type !== "server")
+					.concat({
+						type: "server",
+						text: response.message,
+						audioData: response.audio_data
+					});
 
-			buttons = response.buttons;
-			actionButtons = response.action_buttons;
-			canInput = response.can_input;
+				buttons = response.buttons;
+				actionButtons = response.action_buttons;
+				canInput = response.can_input;
+			}
+			else if (buttonText === "Sign out") {
+				const payload = {
+					user_id: user.id,
+					username: user.username,
+					user_first_name: user.first_name,
+					user_last_name: user.last_name,
+					action_step: ActionStep.SIGN_OUT,
+					session_data: sessionData || EMPTY_SESSION_DATA
+				};
 
-			if (response.stage === AuthStage.SignedOut) {
-				try {
-					const exists = await sessionManager.session_exists(BigInt(user.id));
-					if (exists) {
-						await sessionManager.delete_session(BigInt(user.id));
-						console.log("Session successfully deleted after sign-out command from user");
-						onSignOut();
+				const response = await sendMessageToServer(payload);
+
+				messages = [...messages,
+					{ type: "user", text: buttonText },
+					{
+						type: "server",
+						text: response.message,
+						audioData: response.audio_data
 					}
-				} catch (error) {
-					console.error("Error handling session deletion after sign-out command from user:", error);
+				];
+
+				buttons = response.buttons;
+				actionButtons = response.action_buttons;
+				canInput = response.can_input;
+
+				if (response.stage === AuthStage.SignedOut) {
+					try {
+						const exists = await sessionManager.session_exists(BigInt(user.id));
+						if (exists) {
+							await sessionManager.delete_session(BigInt(user.id));
+							console.log("Session successfully deleted after sign-out command from user");
+							onSignOut();
+						}
+					} catch (error) {
+						console.error("Error handling session deletion after sign-out command from user:", error);
+					}
 				}
+			}
+			else {
+				const payload = {
+					user_id: user.id,
+					username: user.username,
+					user_first_name: user.first_name,
+					user_last_name: user.last_name,
+					action: buttonText,
+					session_data: sessionData || EMPTY_SESSION_DATA
+				};
+
+				const response = await sendMessageToServer(payload);
+
+				messages = [...messages,
+					{ type: "user", text: buttonText },
+					{
+						type: "server",
+						text: response.message,
+						audioData: response.audio_data
+					}
+				];
+
+				buttons = response.buttons;
+				actionButtons = response.action_buttons;
+				canInput = response.can_input;
 			}
 		} catch (error) {
 			console.error('Error handling button click:', error);
@@ -132,7 +185,6 @@
 			<div class="message-row {message.type}">
 				{#if message.type === "server"}
 					<div class="message server-message">
-<!--						<img src={serverAvatarUrl} alt="Server" class="avatar"/>&ndash;&gt;-->
 						{#if message.audioData}
 							<div class="audio-message">
 								<audio
@@ -145,7 +197,13 @@
 								<div class="message-text">{message.text}</div>
 							</div>
 						{:else}
-							<div class="message-text">{message.text}</div>
+							<div class="message-text">
+								{#if message.isLoading}
+									<span class="loading-dots">...</span>
+								{:else}
+									{message.text}
+								{/if}
+							</div>
 						{/if}
 					</div>
 				{:else}

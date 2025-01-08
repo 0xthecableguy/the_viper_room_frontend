@@ -54,4 +54,5 @@ export type Message = {
 	text: string;
 	avatarUrl?: string | null;
 	audioData?: number[];
+	isLoading?: boolean;
 };
