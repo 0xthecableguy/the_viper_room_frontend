@@ -12,6 +12,9 @@ const config = {
 			fallback: null,
 			strict: true
 		}),
+		paths: {
+			base: '/the_viper_room_frontend'
+		},
 		alias: {
 			'@services': 'src/services',
 			'@components': 'src/routes/components',
