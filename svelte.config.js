@@ -8,10 +8,10 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		adapter: adapter(),
-		paths: {
-			base: import.meta.env.PROD ? '/the_viper_room_frontend' : ''
-		},
+		adapter: adapter({
+			fallback: null,
+			strict: true
+		}),
 		alias: {
 			'@services': 'src/services',
 			'@components': 'src/routes/components',
