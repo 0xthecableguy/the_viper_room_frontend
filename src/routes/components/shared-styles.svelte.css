@@ -179,3 +179,14 @@
     max-width: 300px;
     border-radius: 8px 8px 8px 0px;
 }
+
+.loading-dots {
+    animation: loadingDots 1.5s infinite;
+    display: inline-block;
+}
+
+@keyframes loadingDots {
+    0% { opacity: .2; }
+    20% { opacity: 1; }
+    100% { opacity: .2; }
+}
