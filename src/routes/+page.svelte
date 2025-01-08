@@ -11,7 +11,7 @@
 	import { ActionStep, AuthStage, type Message, type WizardPiServerResponse } from '../types';
 	import { extract_session_data_from_db } from '@services/db.utils';
 	import { IMAGES } from '../constants';
-	// import { fetchAvatarUrl } from '@services/api.js';
+	import { fetchAvatarUrl } from '@services/api.js';
 
 	let user: TelegramUser | null = null;
 	let avatarUrl: string | null = null;
@@ -108,10 +108,10 @@
 		}
 	};
 
-	async function fetchAvatarUrl(userId: number): Promise<string | null> {
-		console.log("Fetching avatar url for user with id:", userId);
-		return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
-	}
+	// async function fetchAvatarUrl(userId: number): Promise<string | null> {
+	// 	console.log("Fetching avatar url for user with id:", userId);
+	// 	return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
+	// }
 
 	const handleLogin = () => {
 		isAuthVisible = true;
