@@ -60,7 +60,6 @@
 				userAvatarUrl = await fetchAvatarUrl(currentUser.id);
 				console.log("Telegram user initialized:", currentUser);
 			} else {
-				console.log("initDataUnsafe:", window.Telegram?.WebApp?.initDataUnsafe);
 				currentUser = {
 					id: 7543812650,
 					username: "test_user",
