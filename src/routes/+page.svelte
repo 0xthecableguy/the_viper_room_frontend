@@ -31,6 +31,8 @@
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
 	onMount(async () => {
+		await new Promise(resolve => setTimeout(resolve, 100));
+
 		await initWasm();
 		console.log("Wasm module initialized");
 
