@@ -164,7 +164,7 @@
 			</div>
 		{:else if isChatVisible}
 			<div class="header">
-				<h1>Welcome to <span class="viper-text">the Viper room</span></h1>
+				<h1><span class="viper-text">the Viper room</span></h1>
 				<p>Your personal info wizard that keeps you always up to date</p>
 			</div>
 
@@ -271,6 +271,7 @@
         text-align: center;
         color: rgba(38, 37, 43, 0.8);
         font-family: 'Questrial', monospace;
+
     }
 
     .header p {
@@ -291,7 +292,7 @@
 
     .header .viper-text {
         font-family: 'Permanent Marker', sans-serif;
-        color: rgba(148, 252, 110, 1);
+        color: rgba(62, 73, 101, 1);
 				font-size: 28px;
     }
 

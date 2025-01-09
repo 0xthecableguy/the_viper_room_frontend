@@ -179,31 +179,43 @@
 }
 
 :global(.plyr-container) {
-    max-width: 300px;
-    margin-bottom: 10px;
+    max-width: 300px !important;
+    margin-bottom: 10px !important;
 }
 
-:global(.plyr--audio) {
-    border-radius: 8px;
-    overflow: hidden;
+:global(.messages-container .plyr--audio) {
+    border-radius: 8px !important;
+    overflow: hidden !important;
 }
 
-:global(.plyr--audio .plyr__controls) {
-    background: rgba(228, 227, 222, 0.8);
-    border-radius: 8px;
-    padding: 8px;
+:global(.messages-container .plyr--audio .plyr__controls) {
+    background: rgba(228, 227, 222, 0.8) !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
 }
 
-:global(.plyr__control--overlaid) {
-    background: rgba(62, 73, 101, 0.8);
+:global(.messages-container .plyr__control--overlaid) {
+    background: rgba(62, 73, 101, 0.8) !important;
 }
 
-:global(.plyr--full-ui input[type=range]) {
-    color: rgba(62, 73, 101, 0.8);;
+:global(.messages-container .plyr--full-ui input[type=range]) {
+    color: rgba(62, 73, 101, 0.8) !important;
 }
 
-:global(.plyr__control:hover) {
-    background: rgba(62, 73, 101, 0.8);
+:global(.messages-container .plyr__control:hover) {
+    background: rgba(62, 73, 101, 0.8) !important;
+}
+
+:global(.messages-container .plyr__progress__buffer) {
+    background: rgba(62, 73, 101, 0.3) !important;
+}
+
+:global(.messages-container .plyr__progress input[type=range]::-webkit-slider-thumb) {
+    background: rgba(62, 73, 101, 0.8) !important;
+}
+
+:global(.messages-container .plyr__controls button svg) {
+    fill: rgba(62, 73, 101, 0.8) !important;
 }
 
 .audio-message {
