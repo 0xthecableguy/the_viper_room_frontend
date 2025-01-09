@@ -22,16 +22,15 @@
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
 	async function handleMessage(userMessage: string, isLoadingNeeded: boolean = false) {
-		// Добавляем сообщение пользователя
+
 		messages = [...messages, { type: "user", text: userMessage }];
 
-		// Если нужны сообщения загрузки (для подкаста)
 		if (isLoadingNeeded) {
 			messages = [...messages,
 				{
 					type: "server",
 					text: "Записываю для тебя подкаст... \nДай мне 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз",
-					isServiceMessage: true // Добавляем флаг для служебных сообщений
+					isServiceMessage: true
 				},
 				{
 					type: "server",
@@ -55,24 +54,20 @@
 
 			const response = await sendMessageToServer(payload);
 
-			// Если это был запрос подкаста, удаляем только служебные сообщения
 			if (isLoadingNeeded) {
-				messages = messages.filter(msg => !msg.isServiceMessage);
+				messages = messages.filter(msg => msg.isServiceMessage !== true);
 			}
 
-			// Добавляем новое сообщение от сервера
 			messages = [...messages, {
 				type: "server",
 				text: response.message,
 				audioData: response.audio_data
 			}];
 
-			// Обновляем состояние кнопок и ввода
 			buttons = response.buttons;
 			actionButtons = response.action_buttons;
 			canInput = response.can_input;
 
-			// Обработка выхода из системы
 			if (response.stage === AuthStage.SignedOut) {
 				try {
 					const exists = await sessionManager.session_exists(BigInt(user.id));
@@ -92,14 +87,12 @@
 		}
 	}
 
-	// Обработчик ввода сообщения от пользователя
 	async function handleSendMessage() {
 		if (!inputMessage.trim()) return;
 		await handleMessage(inputMessage);
-		inputMessage = ""; // Очищаем поле ввода
+		inputMessage = "";
 	}
 
-	// Обработчик нажатия на кнопки
 	async function handleButtonClick(buttonText: string) {
 		const isNewsRequest = buttonText === "Get news!";
 		await handleMessage(buttonText, isNewsRequest);
