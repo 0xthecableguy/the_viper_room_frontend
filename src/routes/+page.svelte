@@ -151,8 +151,7 @@
 		{#if isAuthVisible}
 			<div class="header">
 				<h1>This is an authentication page</h1>
-				<p>Please provide the data you will be asked for to be logged-in<br>To be sure it's safe, check "Account
-					security policy" at the main page of the App</p>
+				<p>Please provide data you will be asked for<br>To be sure it's safe, check "Account security policy" at the main page of the App</p>
 			</div>
 
 			<div class="auth-container">
@@ -277,10 +276,7 @@
         white-space: pre-wrap;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        max-width: 600px;
-        align-items: center;
-				align-self: center;
-				align-content: center;
+        max-width: 500px;
         color: rgba(38, 37, 43, 0.8);
         font-family: 'Questrial', monospace;
 				margin-bottom: 8px;
