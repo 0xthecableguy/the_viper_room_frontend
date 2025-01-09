@@ -12,7 +12,7 @@
 	import { extract_session_data_from_db } from '@services/db.utils';
 	import { IMAGES } from '../constants';
 	import { fetchAvatarUrl } from '@services/api.js';
-	import { scale } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
 
 	let user: TelegramUser | null = null;
 	let avatarUrl: string | null = null;
@@ -190,7 +190,7 @@
 							class="login-button"
 							on:click={handleLogin}
 							in:scale={{
-                duration: 300,
+                duration: 500,
                 delay: 600,
                 start: 0.95,
                 opacity: 0
@@ -203,11 +203,9 @@
 						<button
 							class="policy-button"
 							on:click={handlePolicyView}
-							in:scale={{
-                duration: 300,
-                delay: 300,
-                start: 0.95,
-                opacity: 0
+							in:fade={{
+                duration: 500,
+                delay: 600
               }}
 						>
 							account security<br>policy
@@ -345,7 +343,9 @@
         transition: all 0.3s ease;
         min-width: 250px;
         font-family: 'Syne Mono', monospace;
-        backdrop-filter: blur(5px);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
     }
 
     .policy-button:hover {
