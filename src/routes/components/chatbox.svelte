@@ -3,7 +3,9 @@
 	import { sendMessageToServer } from "@services/api.js";
 	import { ActionStep, AuthStage } from '../../types';
 	import type { SessionManager } from 'wizard-pi-wasm';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
+	import Plyr from 'plyr';
+	import 'plyr/dist/plyr.css';
 
 	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
@@ -16,10 +18,38 @@
 	export let onSignOut: () => void;
 	export let messages: Message[];
 
+	let players: Plyr[] = [];
+	let audioElements: HTMLAudioElement[] = [];
 	let audioUrls: string[] = [];
 	let inputMessage: string = "";
 
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
+
+	onMount(() => {
+		initializePlayers();
+	});
+
+	function initializePlayers() {
+		audioElements.forEach((audio, index) => {
+			if (audio && !players[index]) {
+				players[index] = new Plyr(audio, {
+					controls: [
+						'play',
+						'progress',
+						'current-time',
+						'duration',
+						'mute',
+						'settings'
+					],
+					settings: ['speed'],
+					speed: {
+						selected: 1,
+						options: [0.5, 0.75, 1, 1.25, 1.5, 2]
+					}
+				});
+			}
+		});
+	}
 
 	async function handleSendMessage() {
 		if (!inputMessage.trim()) return;
@@ -58,7 +88,7 @@
 					{ type: "user", text: buttonText },
 					{
 						type: "server",
-						text: "Записываю для тебя подкаст... \nдай мне пару минут, не закрывай приложение, но можешь его свернуть"
+						text: "Записываю для тебя подкаст... \nДай 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз"
 					},
 					{
 						type: "server",
@@ -175,6 +205,7 @@
 
 	onDestroy(() => {
 		audioUrls.forEach(url => URL.revokeObjectURL(url));
+		players.forEach(player => player?.destroy());
 	});
 
 </script>
@@ -187,19 +218,22 @@
 					<div class="message server-message">
 						{#if message.audioData}
 							<div class="audio-message">
-								<audio
-									controls
-									src={createAudioUrl(message.audioData)}
-									on:error={(e: Event) => console.error('Audio error:', e)}
-								>
-									Your browser does not support the audio element.
-								</audio>
+								<div class="plyr-container">
+									<audio
+										bind:this={audioElements[messages.indexOf(message)]}
+										src={createAudioUrl(message.audioData)}
+										on:error={(e: Event) => console.error('Audio error:', e)}
+										on:canplay={() => initializePlayers()}
+									>
+										Your browser does not support the audio element.
+									</audio>
+								</div>
 								<div class="message-text">{message.text}</div>
 							</div>
 						{:else}
 							<div class="message-text">
 								{#if message.isLoading}
-									<span class="loading-dots">...</span>
+									<span class="loading-dots">🎙️  ...   </span>
 								{:else}
 									{message.text}
 								{/if}
