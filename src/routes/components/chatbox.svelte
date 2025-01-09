@@ -21,140 +21,88 @@
 
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
-	async function handleSendMessage() {
-		if (!inputMessage.trim()) return;
+	async function handleMessage(userMessage: string, isLoadingNeeded: boolean = false) {
+		// Добавляем сообщение пользователя
+		messages = [...messages, { type: "user", text: userMessage }];
 
-		messages = [...messages, { type: "user", text: inputMessage }];
+		// Если нужны сообщения загрузки (для подкаста)
+		if (isLoadingNeeded) {
+			messages = [...messages,
+				{
+					type: "server",
+					text: "Записываю для тебя подкаст... \nДай мне 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз",
+					isServiceMessage: true // Добавляем флаг для служебных сообщений
+				},
+				{
+					type: "server",
+					text: "...",
+					isLoading: true,
+					isServiceMessage: true
+				}
+			];
+		}
 
 		try {
-
-			const serverResponse = await sendMessageToServer({
+			const payload = {
 				user_id: user.id,
 				username: user.username,
 				user_first_name: user.first_name,
 				user_last_name: user.last_name,
-				action: inputMessage,
-				session_data: sessionData || EMPTY_SESSION_DATA
-			});
+				action: userMessage,
+				session_data: sessionData || EMPTY_SESSION_DATA,
+				...(userMessage === "Sign out" && { action_step: ActionStep.SIGN_OUT })
+			};
 
-			messages = [...messages, { type: "server", text:serverResponse.message }];
+			const response = await sendMessageToServer(payload);
 
-			buttons = serverResponse.buttons;
-			actionButtons = serverResponse.action_buttons;
-			canInput = serverResponse.can_input;
+			// Если это был запрос подкаста, удаляем только служебные сообщения
+			if (isLoadingNeeded) {
+				messages = messages.filter(msg => !msg.isServiceMessage);
+			}
 
-			inputMessage = "";
+			// Добавляем новое сообщение от сервера
+			messages = [...messages, {
+				type: "server",
+				text: response.message,
+				audioData: response.audio_data
+			}];
+
+			// Обновляем состояние кнопок и ввода
+			buttons = response.buttons;
+			actionButtons = response.action_buttons;
+			canInput = response.can_input;
+
+			// Обработка выхода из системы
+			if (response.stage === AuthStage.SignedOut) {
+				try {
+					const exists = await sessionManager.session_exists(BigInt(user.id));
+					if (exists) {
+						await sessionManager.delete_session(BigInt(user.id));
+						console.log("Session successfully deleted after sign-out command from user");
+						onSignOut();
+					}
+				} catch (error) {
+					console.error("Error handling session deletion after sign-out command from user:", error);
+				}
+			}
+
 		} catch (error) {
-			console.error('Error sending message:', error);
-			messages = [...messages, { type: "server", text: "Error sending message to server" }];
+			console.error('Error handling message:', error);
+			messages = [...messages, { type: "server", text: "Error processing your request" }];
 		}
 	}
 
+	// Обработчик ввода сообщения от пользователя
+	async function handleSendMessage() {
+		if (!inputMessage.trim()) return;
+		await handleMessage(inputMessage);
+		inputMessage = ""; // Очищаем поле ввода
+	}
+
+	// Обработчик нажатия на кнопки
 	async function handleButtonClick(buttonText: string) {
-		try {
-			if (buttonText === "Get news!") {
-				messages = [...messages,
-					{ type: "user", text: buttonText },
-					{
-						type: "server",
-						text: "Записываю для тебя подкаст... \nДай мне 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз"
-					},
-					{
-						type: "server",
-						text: "...",
-						isLoading: true
-					}
-				];
-
-				const payload = {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action: buttonText,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				};
-
-				const response = await sendMessageToServer(payload);
-
-				messages = messages
-					.filter(msg => !msg.isLoading && msg.type !== "server")
-					.concat({
-						type: "server",
-						text: response.message,
-						audioData: response.audio_data
-					});
-
-				buttons = response.buttons;
-				actionButtons = response.action_buttons;
-				canInput = response.can_input;
-			}
-			else if (buttonText === "Sign out") {
-				const payload = {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action_step: ActionStep.SIGN_OUT,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				};
-
-				const response = await sendMessageToServer(payload);
-
-				messages = [...messages,
-					{ type: "user", text: buttonText },
-					{
-						type: "server",
-						text: response.message,
-						audioData: response.audio_data
-					}
-				];
-
-				buttons = response.buttons;
-				actionButtons = response.action_buttons;
-				canInput = response.can_input;
-
-				if (response.stage === AuthStage.SignedOut) {
-					try {
-						const exists = await sessionManager.session_exists(BigInt(user.id));
-						if (exists) {
-							await sessionManager.delete_session(BigInt(user.id));
-							console.log("Session successfully deleted after sign-out command from user");
-							onSignOut();
-						}
-					} catch (error) {
-						console.error("Error handling session deletion after sign-out command from user:", error);
-					}
-				}
-			}
-			else {
-				const payload = {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action: buttonText,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				};
-
-				const response = await sendMessageToServer(payload);
-
-				messages = [...messages,
-					{ type: "user", text: buttonText },
-					{
-						type: "server",
-						text: response.message,
-						audioData: response.audio_data
-					}
-				];
-
-				buttons = response.buttons;
-				actionButtons = response.action_buttons;
-				canInput = response.can_input;
-			}
-		} catch (error) {
-			console.error('Error handling button click:', error);
-		}
+		const isNewsRequest = buttonText === "Get news!";
+		await handleMessage(buttonText, isNewsRequest);
 	}
 
 	function createAudioUrl(audioData: number[]): string {
