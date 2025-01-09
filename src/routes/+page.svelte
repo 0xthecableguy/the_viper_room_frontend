@@ -262,11 +262,12 @@
         align-self: center;
         align-content: center;
         background: rgba(227, 227, 222, 0.6);
+        color: rgba(38, 37, 43, 0.8);
+        font-family: 'Questrial', monospace;
     }
 
     .header h1 {
         font-size: 16px;
-        /*margin-bottom: 8px;*/
         text-align: center;
         color: rgba(38, 37, 43, 0.8);
         font-family: 'Questrial', monospace;
@@ -290,7 +291,7 @@
 
     .header .viper-text {
         font-family: 'Permanent Marker', sans-serif;
-        color: rgba(62, 73, 101, 1);
+        color: rgba(148, 252, 110, 1);
 				font-size: 28px;
     }
 
