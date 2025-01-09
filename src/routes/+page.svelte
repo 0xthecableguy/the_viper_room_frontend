@@ -333,7 +333,7 @@
     }
 
     .policy-button {
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.3);
         color: rgba(38, 37, 43, 0.9);
         padding: 12px 25px;
@@ -343,9 +343,6 @@
         transition: all 0.3s ease;
         min-width: 250px;
         font-family: 'Syne Mono', monospace;
-        transform: translateZ(0);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
     }
 
     .policy-button:hover {
