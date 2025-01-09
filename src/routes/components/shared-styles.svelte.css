@@ -177,7 +177,7 @@
 .audio-message audio {
     width: 100%;
     max-width: 300px;
-    border-radius: 8px 8px 8px 0px;
+    border-radius: 8px;
 }
 
 .loading-dots {

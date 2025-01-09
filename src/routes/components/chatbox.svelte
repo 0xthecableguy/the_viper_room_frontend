@@ -42,7 +42,6 @@
 			buttons = serverResponse.buttons;
 			actionButtons = serverResponse.action_buttons;
 			canInput = serverResponse.can_input;
-			avatarUrl = avatarUrl;
 
 			inputMessage = "";
 		} catch (error) {
@@ -58,7 +57,7 @@
 					{ type: "user", text: buttonText },
 					{
 						type: "server",
-						text: "Записываю для тебя подкаст... \nдай мне пару минут, не закрывай приложение, но можешь его свернуть"
+						text: "Записываю для тебя подкаст... \nДай мне 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз"
 					},
 					{
 						type: "server",
@@ -199,7 +198,7 @@
 						{:else}
 							<div class="message-text">
 								{#if message.isLoading}
-									<span class="loading-dots">...</span>
+									<span class="loading-dots">🎙️  ... recording ...   </span>
 								{:else}
 									{message.text}
 								{/if}
