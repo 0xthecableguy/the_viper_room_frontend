@@ -151,7 +151,8 @@
 		{#if isAuthVisible}
 			<div class="header">
 				<h1>This is an authentication page</h1>
-				<p>Please provide the data you will be asked for to be logged-in<br>To be sure it's safe, check "Account security policy" at the main page of the App</p>
+				<p>Please provide the data you will be asked for to be logged-in<br>To be sure it's safe, check "Account
+					security policy" at the main page of the App</p>
 			</div>
 
 			<div class="auth-container">
@@ -183,12 +184,7 @@
 			</div>
 		{:else}
 			{#if showButtons}
-				<div class="buttons-container"
-						 in:fade={{
-            duration: 300,
-            delay: 150
-          }}
-				>
+				<div class="buttons-container">
 					<div class="main-button-container">
 						<button
 							class="login-button"
