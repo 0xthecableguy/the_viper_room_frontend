@@ -167,27 +167,17 @@
     }
 }
 
-.plyr-container {
-    max-width: 300px;
-    margin-bottom: 10px;
-}
-
-:global(.plyr) {
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-:global(.plyr--audio .plyr__controls) {
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-    padding: 8px;
-}
-
 .audio-message {
     display: flex;
     flex-direction: column;
     gap: 8px;
     width: 100%;
+}
+
+.audio-message audio {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 8px;
 }
 
 .loading-dots {
