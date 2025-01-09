@@ -17,7 +17,6 @@
     padding-bottom: 20px;
     overflow-y: auto;
     align-items: center;
-    /*color: #8efafd;*/
     margin-bottom: 10px;
 }
 
@@ -37,7 +36,6 @@
 
 .message {
     max-width: 60%;
-    /*border-radius: 10px;*/
     color: rgba(38, 37, 43, 1);
     word-wrap: break-word;
     display: flex;

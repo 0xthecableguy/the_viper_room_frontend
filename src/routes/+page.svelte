@@ -208,8 +208,8 @@
 							class="policy-button"
 							on:click={handlePolicyView}
 							in:fade={{
-                duration: 300,
-                delay: 300
+                duration: 500,
+                delay: 600
               }}
 						>
 							account security<br>policy
