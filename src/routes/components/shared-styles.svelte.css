@@ -167,19 +167,6 @@
     }
 }
 
-.audio-message {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-}
-
-.audio-message audio {
-    width: 100%;
-    max-width: 300px;
-    border-radius: 8px;
-}
-
 .loading-dots {
     animation: loadingDots 1.5s infinite;
     display: inline-block;
@@ -189,4 +176,39 @@
     0% { opacity: .2; }
     20% { opacity: 1; }
     100% { opacity: .2; }
+}
+
+:global(.plyr-container) {
+    max-width: 300px;
+    margin-bottom: 10px;
+}
+
+:global(.plyr--audio) {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+:global(.plyr--audio .plyr__controls) {
+    background: #ffffff;  /* Было var(--background-light) */
+    border-radius: 8px;
+    padding: 8px;
+}
+
+:global(.plyr__control--overlaid) {
+    background: #007aff;  /* Было var(--primary-color) */
+}
+
+:global(.plyr--full-ui input[type=range]) {
+    color: #007aff;  /* Было var(--primary-color) */
+}
+
+:global(.plyr__control:hover) {
+    background: #007aff;  /* Было var(--primary-color) */
+}
+
+.audio-message {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
 }

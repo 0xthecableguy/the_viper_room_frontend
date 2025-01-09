@@ -4,6 +4,8 @@
 	import { ActionStep, AuthStage } from '../../types';
 	import type { SessionManager } from 'wizard-pi-wasm';
 	import { onDestroy } from 'svelte';
+	import Plyr from 'plyr';
+	import 'plyr/dist/plyr.css';
 
 	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
@@ -16,10 +18,31 @@
 	export let onSignOut: () => void;
 	export let messages: Message[];
 
+	let players: Plyr[] = [];
 	let audioUrls: string[] = [];
 	let inputMessage: string = "";
 
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
+
+	function initPlayer(audioElement: HTMLAudioElement) {
+		const player = new Plyr(audioElement, {
+			controls: [
+				'play',
+				'progress',
+				'current-time',
+				'duration',
+				'mute',
+				'settings'
+			],
+			settings: ['speed'],
+			speed: {
+				selected: 1,
+				options: [0.75, 1, 1.25, 1.5, 2]
+			}
+		});
+		players.push(player);
+		return player;
+	}
 
 	async function handleMessage(userMessage: string, isLoadingNeeded: boolean = false) {
 
@@ -115,6 +138,7 @@
 
 	onDestroy(() => {
 		audioUrls.forEach(url => URL.revokeObjectURL(url));
+		players.forEach(player => player?.destroy());
 	});
 
 </script>
@@ -127,13 +151,15 @@
 					<div class="message server-message">
 						{#if message.audioData}
 							<div class="audio-message">
-								<audio
-									controls
-									src={createAudioUrl(message.audioData)}
-									on:error={(e: Event) => console.error('Audio error:', e)}
-								>
-									Your browser does not support the audio element.
-								</audio>
+								<div class="plyr-container">
+									<audio
+										src={createAudioUrl(message.audioData)}
+										on:error={(e: Event) => console.error('Audio error:', e)}
+										use:initPlayer
+									>
+										Your browser does not support the audio element.
+									</audio>
+								</div>
 								<div class="message-text">{message.text}</div>
 							</div>
 						{:else}
