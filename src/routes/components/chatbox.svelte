@@ -4,6 +4,7 @@
 	import { ActionStep, AuthStage } from '../../types';
 	import type { SessionManager } from 'wizard-pi-wasm';
 	import { onDestroy } from 'svelte';
+	import WaveSurfer from 'wavesurfer.js';
 
 	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
@@ -16,145 +17,111 @@
 	export let onSignOut: () => void;
 	export let messages: Message[];
 
+	let wavesurfers: WaveSurfer[] = [];
 	let audioUrls: string[] = [];
 	let inputMessage: string = "";
 
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
-	async function handleSendMessage() {
-		if (!inputMessage.trim()) return;
+	function initAudioPlayer(container: HTMLDivElement, audioUrl: string) {
+		const wavesurfer = WaveSurfer.create({
+			container: container,
+			height: 48,
+			waveColor: 'rgba(62, 73, 101, 0.4)',
+			progressColor: 'rgba(62, 73, 101, 0.8)',
+			cursorColor: 'rgba(62, 73, 101, 0.8)',
+			barWidth: 2,
+			barGap: 2,
+			barRadius: 3,
+			normalize: true,
+			fillParent: true,
+			autoplay: false,
+			interact: true,
+			dragToSeek: true,
+			mediaControls: true
+		});
 
-		messages = [...messages, { type: "user", text: inputMessage }];
+		wavesurfer.load(audioUrl);
+		wavesurfers.push(wavesurfer);
+
+		return wavesurfer;
+	}
+
+	async function handleMessage(userMessage: string, isLoadingNeeded: boolean = false) {
+
+		messages = [...messages, { type: "user", text: userMessage }];
+
+		if (isLoadingNeeded) {
+			messages = [...messages,
+				{
+					type: "server",
+					text: "Записываю для тебя подкаст... \nДай мне 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз",
+					isServiceMessage: true
+				},
+				{
+					type: "server",
+					text: "...",
+					isLoading: true,
+					isServiceMessage: true
+				}
+			];
+		}
 
 		try {
-
-			const serverResponse = await sendMessageToServer({
+			const payload = {
 				user_id: user.id,
 				username: user.username,
 				user_first_name: user.first_name,
 				user_last_name: user.last_name,
-				action: inputMessage,
-				session_data: sessionData || EMPTY_SESSION_DATA
-			});
+				action: userMessage,
+				session_data: sessionData || EMPTY_SESSION_DATA,
+				...(userMessage === "Sign out" && { action_step: ActionStep.SIGN_OUT })
+			};
 
-			messages = [...messages, { type: "server", text:serverResponse.message }];
+			const response = await sendMessageToServer(payload);
 
-			buttons = serverResponse.buttons;
-			actionButtons = serverResponse.action_buttons;
-			canInput = serverResponse.can_input;
+			if (isLoadingNeeded) {
+				messages = messages.filter(msg => msg.isServiceMessage !== true);
+			}
 
-			inputMessage = "";
+			messages = [...messages, {
+				type: "server",
+				text: response.message,
+				audioData: response.audio_data
+			}];
+
+			buttons = response.buttons;
+			actionButtons = response.action_buttons;
+			canInput = response.can_input;
+
+			if (response.stage === AuthStage.SignedOut) {
+				try {
+					const exists = await sessionManager.session_exists(BigInt(user.id));
+					if (exists) {
+						await sessionManager.delete_session(BigInt(user.id));
+						console.log("Session successfully deleted after sign-out command from user");
+						onSignOut();
+					}
+				} catch (error) {
+					console.error("Error handling session deletion after sign-out command from user:", error);
+				}
+			}
+
 		} catch (error) {
-			console.error('Error sending message:', error);
-			messages = [...messages, { type: "server", text: "Error sending message to server" }];
+			console.error('Error handling message:', error);
+			messages = [...messages, { type: "server", text: "Error processing your request" }];
 		}
 	}
 
+	async function handleSendMessage() {
+		if (!inputMessage.trim()) return;
+		await handleMessage(inputMessage);
+		inputMessage = "";
+	}
+
 	async function handleButtonClick(buttonText: string) {
-		try {
-			if (buttonText === "Get news!") {
-				messages = [...messages,
-					{ type: "user", text: buttonText },
-					{
-						type: "server",
-						text: "Записываю для тебя подкаст... \nДай мне 2-3 минуты, не закрывай приложение, но можешь его свернуть, смахнув вниз"
-					},
-					{
-						type: "server",
-						text: "...",
-						isLoading: true
-					}
-				];
-
-				const payload = {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action: buttonText,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				};
-
-				const response = await sendMessageToServer(payload);
-
-				messages = messages
-					.filter(msg => !msg.isLoading && msg.type !== "server")
-					.concat({
-						type: "server",
-						text: response.message,
-						audioData: response.audio_data
-					});
-
-				buttons = response.buttons;
-				actionButtons = response.action_buttons;
-				canInput = response.can_input;
-			}
-			else if (buttonText === "Sign out") {
-				const payload = {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action_step: ActionStep.SIGN_OUT,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				};
-
-				const response = await sendMessageToServer(payload);
-
-				messages = [...messages,
-					{ type: "user", text: buttonText },
-					{
-						type: "server",
-						text: response.message,
-						audioData: response.audio_data
-					}
-				];
-
-				buttons = response.buttons;
-				actionButtons = response.action_buttons;
-				canInput = response.can_input;
-
-				if (response.stage === AuthStage.SignedOut) {
-					try {
-						const exists = await sessionManager.session_exists(BigInt(user.id));
-						if (exists) {
-							await sessionManager.delete_session(BigInt(user.id));
-							console.log("Session successfully deleted after sign-out command from user");
-							onSignOut();
-						}
-					} catch (error) {
-						console.error("Error handling session deletion after sign-out command from user:", error);
-					}
-				}
-			}
-			else {
-				const payload = {
-					user_id: user.id,
-					username: user.username,
-					user_first_name: user.first_name,
-					user_last_name: user.last_name,
-					action: buttonText,
-					session_data: sessionData || EMPTY_SESSION_DATA
-				};
-
-				const response = await sendMessageToServer(payload);
-
-				messages = [...messages,
-					{ type: "user", text: buttonText },
-					{
-						type: "server",
-						text: response.message,
-						audioData: response.audio_data
-					}
-				];
-
-				buttons = response.buttons;
-				actionButtons = response.action_buttons;
-				canInput = response.can_input;
-			}
-		} catch (error) {
-			console.error('Error handling button click:', error);
-		}
+		const isNewsRequest = buttonText === "Get news!";
+		await handleMessage(buttonText, isNewsRequest);
 	}
 
 	function createAudioUrl(audioData: number[]): string {
@@ -173,6 +140,7 @@
 	}
 
 	onDestroy(() => {
+		wavesurfers.forEach(ws => ws.destroy());
 		audioUrls.forEach(url => URL.revokeObjectURL(url));
 	});
 
@@ -186,13 +154,9 @@
 					<div class="message server-message">
 						{#if message.audioData}
 							<div class="audio-message">
-								<audio
-									controls
-									src={createAudioUrl(message.audioData)}
-									on:error={(e: Event) => console.error('Audio error:', e)}
-								>
-									Your browser does not support the audio element.
-								</audio>
+								<div class="wavesurfer-container" use:initAudioPlayer={createAudioUrl(message.audioData)}>
+									<div class="wave"></div>
+								</div>
 								<div class="message-text">{message.text}</div>
 							</div>
 						{:else}

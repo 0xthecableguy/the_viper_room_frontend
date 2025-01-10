@@ -17,7 +17,6 @@
     padding-bottom: 20px;
     overflow-y: auto;
     align-items: center;
-    /*color: #8efafd;*/
     margin-bottom: 10px;
 }
 
@@ -37,12 +36,23 @@
 
 .message {
     max-width: 60%;
-    /*border-radius: 10px;*/
     color: rgba(38, 37, 43, 1);
     word-wrap: break-word;
     display: flex;
     align-items: center;
     padding-left: 20px;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .user-message .message-text {
@@ -73,9 +83,9 @@
     margin: 0 10px;
 }
 
-.user-message .avatar {
-    transform: scaleX(-1);
-}
+/*.user-message .avatar {*/
+/*    transform: scaleX(-1);*/
+/*}*/
 
 .input-container {
     display: flex;
@@ -103,7 +113,6 @@
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    font-family: 'Questrial', sans-serif;
     transition: transform 0.2s, background-color 0.2s;
 }
 
@@ -138,7 +147,6 @@
     cursor: pointer;
     text-align: center;
     white-space: nowrap;
-    font-family: 'Questrial', sans-serif;
     transition: transform 0.2s, background-color 0.2s;
 }
 
@@ -158,28 +166,6 @@
     background-color: rgba(228, 227, 222, 0.8);
 }
 
-@keyframes gradient-wave {
-    0% {
-        background-position: 0% 0%;
-    }
-    100% {
-        background-position: 100% 100%;
-    }
-}
-
-.audio-message {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-}
-
-.audio-message audio {
-    width: 100%;
-    max-width: 300px;
-    border-radius: 8px;
-}
-
 .loading-dots {
     animation: loadingDots 1.5s infinite;
     display: inline-block;
@@ -189,4 +175,22 @@
     0% { opacity: .2; }
     20% { opacity: 1; }
     100% { opacity: .2; }
+}
+
+.wavesurfer-container {
+    background: rgba(228, 227, 222, 0.8);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.audio-message {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
 }

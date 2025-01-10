@@ -150,8 +150,8 @@
 	{#if user}
 		{#if isAuthVisible}
 			<div class="header">
-				<h1>This is an authentication page</h1>
-				<p>Please provide the data you will be asked for to be logged-in<br>To be sure it's safe, check "Account security policy" at the main page of the App</p>
+				<h1>Для полноценной работы приложения необходимо авторизоваться</h1>
+				<p>Пожалуйста, следуй моим инструкциям далее<br>Чтобы убедиться, что авторизация безопасна, загляни в раздел "Account security policy" на главной странице приложения</p>
 			</div>
 
 			<div class="auth-container">
@@ -164,7 +164,7 @@
 			</div>
 		{:else if isChatVisible}
 			<div class="header">
-				<h1>Welcome to <span class="viper-text">the Viper room</span></h1>
+				<h1><span class="viper-text">the Viper room</span></h1>
 				<p>Your personal info wizard that keeps you always up to date</p>
 			</div>
 
@@ -183,12 +183,7 @@
 			</div>
 		{:else}
 			{#if showButtons}
-				<div class="buttons-container"
-						 in:fade={{
-            duration: 300,
-            delay: 150
-          }}
-				>
+				<div class="buttons-container">
 					<div class="main-button-container">
 						<button
 							class="login-button"
@@ -208,8 +203,8 @@
 							class="policy-button"
 							on:click={handlePolicyView}
 							in:fade={{
-                duration: 300,
-                delay: 300
+                duration: 500,
+                delay: 600
               }}
 						>
 							account security<br>policy
@@ -236,7 +231,7 @@
         width: 100%;
         overflow-x: hidden;
         overflow-y: hidden;
-        font-family: 'Questrial', sans-serif;
+        font-family: 'PT Sans Narrow', sans-serif;
     }
 
     .main-container {
@@ -262,14 +257,14 @@
         align-self: center;
         align-content: center;
         background: rgba(227, 227, 222, 0.6);
+        color: rgba(38, 37, 43, 0.8);
     }
 
     .header h1 {
         font-size: 16px;
-        /*margin-bottom: 8px;*/
         text-align: center;
         color: rgba(38, 37, 43, 0.8);
-        font-family: 'Questrial', monospace;
+
     }
 
     .header p {
@@ -279,13 +274,10 @@
         white-space: pre-wrap;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        max-width: 600px;
-        align-items: center;
-				align-self: center;
-				align-content: center;
+        max-width: 500px;
         color: rgba(38, 37, 43, 0.8);
-        font-family: 'Questrial', monospace;
 				margin-bottom: 8px;
+        font-family: 'PT Sans Narrow', sans-serif;
     }
 
     .header .viper-text {
@@ -335,7 +327,7 @@
     }
 
     .policy-button {
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.3);
         color: rgba(38, 37, 43, 0.9);
         padding: 12px 25px;
@@ -345,7 +337,7 @@
         transition: all 0.3s ease;
         min-width: 250px;
         font-family: 'Syne Mono', monospace;
-        backdrop-filter: blur(5px);
+
     }
 
     .policy-button:hover {
