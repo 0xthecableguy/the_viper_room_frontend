@@ -31,7 +31,7 @@
 			progressColor: 'rgba(62, 73, 101, 0.8)',
 			cursorColor: 'rgba(62, 73, 101, 0.8)',
 			barWidth: 2,
-			barGap: 2,
+			barGap: 1,
 			barRadius: 3,
 			normalize: true,
 			fillParent: true,
@@ -162,7 +162,7 @@
 						{:else}
 							<div class="message-text">
 								{#if message.isLoading}
-									<span class="loading-dots">🎙️  ... recording ...   </span>
+									<span class="loading-dots">🎙️  ... записываю подкаст ...   ☕️</span>
 								{:else}
 									{message.text}
 								{/if}
