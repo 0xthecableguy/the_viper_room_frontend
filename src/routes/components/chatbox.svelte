@@ -4,8 +4,7 @@
 	import { ActionStep, AuthStage } from '../../types';
 	import type { SessionManager } from 'wizard-pi-wasm';
 	import { onDestroy } from 'svelte';
-	import Plyr from 'plyr';
-	import 'plyr/dist/plyr.css';
+	import WaveSurfer from 'wavesurfer.js';
 
 	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
@@ -18,30 +17,34 @@
 	export let onSignOut: () => void;
 	export let messages: Message[];
 
-	let players: Plyr[] = [];
+	let wavesurfers: WaveSurfer[] = [];
 	let audioUrls: string[] = [];
 	let inputMessage: string = "";
 
 	const EMPTY_SESSION_DATA = new ArrayBuffer(0);
 
-	function initPlayer(audioElement: HTMLAudioElement) {
-		const player = new Plyr(audioElement, {
-			controls: [
-				'play',
-				'progress',
-				'current-time',
-				'duration',
-				'mute',
-				'settings'
-			],
-			settings: ['speed'],
-			speed: {
-				selected: 1,
-				options: [0.75, 1, 1.25, 1.5, 2]
-			}
+	function initAudioPlayer(container: HTMLDivElement, audioUrl: string) {
+		const wavesurfer = WaveSurfer.create({
+			container: container,
+			height: 48,
+			waveColor: 'rgba(62, 73, 101, 0.4)',
+			progressColor: 'rgba(62, 73, 101, 0.8)',
+			cursorColor: 'rgba(62, 73, 101, 0.8)',
+			barWidth: 2,
+			barGap: 2,
+			barRadius: 3,
+			normalize: true,
+			fillParent: true,
+			autoplay: false,
+			interact: true,
+			dragToSeek: true,
+			mediaControls: true
 		});
-		players.push(player);
-		return player;
+
+		wavesurfer.load(audioUrl);
+		wavesurfers.push(wavesurfer);
+
+		return wavesurfer;
 	}
 
 	async function handleMessage(userMessage: string, isLoadingNeeded: boolean = false) {
@@ -137,8 +140,8 @@
 	}
 
 	onDestroy(() => {
+		wavesurfers.forEach(ws => ws.destroy());
 		audioUrls.forEach(url => URL.revokeObjectURL(url));
-		players.forEach(player => player?.destroy());
 	});
 
 </script>
@@ -151,14 +154,8 @@
 					<div class="message server-message">
 						{#if message.audioData}
 							<div class="audio-message">
-								<div class="plyr-container">
-									<audio
-										src={createAudioUrl(message.audioData)}
-										on:error={(e: Event) => console.error('Audio error:', e)}
-										use:initPlayer
-									>
-										Your browser does not support the audio element.
-									</audio>
+								<div class="wavesurfer-container" use:initAudioPlayer={createAudioUrl(message.audioData)}>
+									<div class="wave"></div>
 								</div>
 								<div class="message-text">{message.text}</div>
 							</div>

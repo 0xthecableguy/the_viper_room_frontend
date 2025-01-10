@@ -150,8 +150,8 @@
 	{#if user}
 		{#if isAuthVisible}
 			<div class="header">
-				<h1>This is an authentication page</h1>
-				<p>Please provide data you will be asked for<br>To be sure it's safe, check "Account security policy" at the main page of the App</p>
+				<h1>Для полноценной работы приложения необходимо авторизоваться</h1>
+				<p>Пожалуйста, следуй моим инструкциям далее<br>Чтобы убедиться, что авторизация безопасна, загляни в раздел "Account security policy" на главной странице приложения</p>
 			</div>
 
 			<div class="auth-container">
@@ -231,7 +231,7 @@
         width: 100%;
         overflow-x: hidden;
         overflow-y: hidden;
-        font-family: 'Questrial', sans-serif;
+        font-family: 'PT Sans Narrow', sans-serif;
     }
 
     .main-container {
@@ -258,14 +258,12 @@
         align-content: center;
         background: rgba(227, 227, 222, 0.6);
         color: rgba(38, 37, 43, 0.8);
-        font-family: 'Questrial', monospace;
     }
 
     .header h1 {
         font-size: 16px;
         text-align: center;
         color: rgba(38, 37, 43, 0.8);
-        font-family: 'Questrial', monospace;
 
     }
 
@@ -278,8 +276,8 @@
         overflow-wrap: break-word;
         max-width: 500px;
         color: rgba(38, 37, 43, 0.8);
-        font-family: 'Questrial', monospace;
 				margin-bottom: 8px;
+        font-family: 'PT Sans Narrow', sans-serif;
     }
 
     .header .viper-text {
@@ -339,6 +337,7 @@
         transition: all 0.3s ease;
         min-width: 250px;
         font-family: 'Syne Mono', monospace;
+
     }
 
     .policy-button:hover {
