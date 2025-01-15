@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import '../lib/wasm.bridge';
-	import type { SessionManager as SessionManagerType } from 'wizard-pi-wasm';
-	import init, { SessionManager } from 'wizard-pi-wasm';
+	import type { SessionManager as SessionManagerType } from 'the-viper-room-wasm';
+	import init, { SessionManager } from 'the-viper-room-wasm';
 	import { sendMessageToServer } from '@services/api.js';
 	import ChatBox from '@components/chatbox.svelte';
 	import AuthBox from '@components/authbox.svelte';
 	import Modal from '@components/modal.svelte';
 	import type { TelegramUser } from '../types';
-	import { ActionStep, AuthStage, type Message, type WizardPiServerResponse } from '../types';
+	import { ActionStep, AuthStage, type Message, type TheViperRoomServerResponse } from '../types';
 	import { extract_session_data_from_db } from '@services/db.utils';
 	import { IMAGES } from '../constants';
 	import { fetchAvatarUrl } from '@services/api.js';
@@ -122,7 +122,7 @@
 		isAuthVisible = true;
 	};
 
-	const handleAuthSuccess = (serverResponse: WizardPiServerResponse) => {
+	const handleAuthSuccess = (serverResponse: TheViperRoomServerResponse) => {
 		isAuthVisible = false;
 		isChatVisible = true;
 
@@ -165,7 +165,7 @@
 		{:else if isChatVisible}
 			<div class="header">
 				<h1><span class="viper-text">the Viper room</span></h1>
-				<p>Your personal info wizard that keeps you always up to date</p>
+				<p>Твой персональный Ai-Vj 😎</p>
 			</div>
 
 			<div class="chat-container">

@@ -4,7 +4,7 @@ export enum ActionStep {
 	SIGN_OUT = "SIGN_OUT",
 }
 
-export interface WizardPiUserActionPayload {
+export interface TheViperRoomUserActionPayload {
 	user_id: number;
 	username?: string;
 	user_first_name?: string;
@@ -24,7 +24,7 @@ export enum AuthStage {
 	MiniAppInitConfirmed = 'MiniAppInitConfirmed',
 }
 
-export interface WizardPiServerResponse {
+export interface TheViperRoomServerResponse {
 	action_buttons: string[];
 	message: string;
 	buttons: string[];

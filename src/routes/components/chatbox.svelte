@@ -2,7 +2,7 @@
 	import './shared-styles.svelte.css';
 	import { sendMessageToServer } from "@services/api.js";
 	import { ActionStep, AuthStage } from '../../types';
-	import type { SessionManager } from 'wizard-pi-wasm';
+	import type { SessionManager } from 'the-viper-room-wasm';
 	import { onDestroy } from 'svelte';
 	import WaveSurfer from 'wavesurfer.js';
 

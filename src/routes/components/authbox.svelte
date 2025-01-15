@@ -1,12 +1,12 @@
 <script lang="ts">
 	import './shared-styles.svelte.css';
 	import { sendMessageToServer } from "@services/api.js";
-	import type { SessionManager } from 'wizard-pi-wasm';
+	import type { SessionManager } from 'the-viper-room-wasm';
 
 	export let user: { id: number; username: string, first_name: string, last_name: string };
 	export let avatarUrl: string | null;
 	export let sessionManager: SessionManager;
-	export let onAuthSuccess: (serverResponse: WizardPiServerResponse) => void;
+	export let onAuthSuccess: (serverResponse: TheViperRoomServerResponse) => void;
 
 	let messages: Array<{ type: "user" | "server"; text: string }> = [];
 	let inputMessage: string = "";
@@ -19,7 +19,7 @@
 	let currentStage: AuthStage | undefined;
 
 	import { onMount } from 'svelte';
-	import { ActionStep, AuthStage, type WizardPiServerResponse } from '../../types';
+	import { ActionStep, AuthStage, type TheViperRoomServerResponse } from '../../types';
 	onMount(async () => {
 		await startAuth();
 	});
@@ -92,7 +92,7 @@
 		}
 	}
 
-	async function handleServerResponse(serverResponse: WizardPiServerResponse) {
+	async function handleServerResponse(serverResponse: TheViperRoomServerResponse) {
 		messages = [...messages, { type: "server", text: serverResponse.message }];
 		buttons = serverResponse.buttons;
 		actionButtons = serverResponse.action_buttons;

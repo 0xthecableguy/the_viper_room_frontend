@@ -68,7 +68,7 @@
 .server-message .message-text {
     background: rgba(228, 227, 222, 0.8);
     color: rgba(38, 37, 43, 1);
-    border-radius: 0px 18px 18px 18px;
+    border-radius: 18px 18px 18px;
     padding: 15px;
     white-space: pre-wrap;
     word-wrap: break-word;

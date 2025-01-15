@@ -1,10 +1,16 @@
 <script lang="ts">
 	import './modal.svelte.css';
-	import textContent from '../../../static/personal_data_security_policy.txt?raw';
+	import { onMount } from 'svelte';
 	export let show: boolean;
 	export let onClose: () => void;
+	import { base } from '$app/paths';
 
 	let isClosing = false;
+	let textContent = '';
+
+	onMount(async () => {
+		textContent = await fetch(`${base}/personal_data_security_policy.txt`).then(r => r.text());
+	});
 
 	function handleClose() {
 		isClosing = true;

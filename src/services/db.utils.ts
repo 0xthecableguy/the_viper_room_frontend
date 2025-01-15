@@ -1,4 +1,4 @@
-import type { SessionManager as SessionManagerType } from 'wizard-pi-wasm';
+import type { SessionManager as SessionManagerType } from 'the-viper-room-wasm';
 
 export async function extract_session_data_from_db(
 	sessionManager: SessionManagerType,

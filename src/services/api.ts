@@ -1,8 +1,8 @@
-import type { WizardPiUserActionPayload, WizardPiServerResponse } from '../types';
+import type { TheViperRoomUserActionPayload, TheViperRoomServerResponse } from '../types';
 
 export const sendMessageToServer = async (
-	payload: WizardPiUserActionPayload
-): Promise<WizardPiServerResponse> => {
+	payload: TheViperRoomUserActionPayload
+): Promise<TheViperRoomServerResponse> => {
 	console.log('Sending request payload to server:', payload);
 
 	const modifiedPayload = {
@@ -10,7 +10,7 @@ export const sendMessageToServer = async (
 		session_data: Array.from(new Uint8Array(payload.session_data))
 	};
 
-	const response = await fetch('https://v3.spb.ru/wizard_pi_user_action', {
+	const response = await fetch('https://v3.spb.ru/the_viper_room_user_action', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
