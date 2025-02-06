@@ -10,7 +10,7 @@ export const sendMessageToServer = async (
 		session_data: Array.from(new Uint8Array(payload.session_data))
 	};
 
-	const response = await fetch('https://v3.spb.ru/the_viper_room_user_action', {
+	const response = await fetch('https://v3.spb.ru/the_viper_room_user_request', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

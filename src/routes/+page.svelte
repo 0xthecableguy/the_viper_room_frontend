@@ -103,20 +103,14 @@
 				canInput = serverResponse.can_input;
 				avatarUrl = avatarUrl;
 			} else {
-				console.log("Telegram client is NOT authorized");
-				console.log("Server response:", serverResponse.message);
+				console.log("Mini App initialization is NOT confirmed by the server");
+				console.log("Server response during Mini App init error:", serverResponse.message);
 			}
 
 		} catch (error) {
 			console.error("Global error in initializing user fn:", error);
 		}
 	};
-
-	// // Hard-coded avatar fetch
-	// async function fetchAvatarUrl(userId: number): Promise<string | null> {
-	// 	console.log("Fetching avatar url for user with id:", userId);
-	// 	return "https://i.ibb.co/j8p2tmq/Pngtree-grey-dinosaur-cartoon-illustration-4653255.png";
-	// }
 
 	const handleLogin = () => {
 		isAuthVisible = true;
