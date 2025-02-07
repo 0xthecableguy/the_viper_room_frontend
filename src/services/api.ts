@@ -31,13 +31,13 @@ export const sendMessageToServer = async (
 
 export const fetchAvatarUrl = async (userId: number): Promise<string | null> => {
 	try {
-		const response = await fetch(`https://v3.spb.ru/get_user_avatar?user_id=${userId}`, {
+		const response = await fetch(`https://v3.spb.ru/the_viper_room_avatar_request?user_id=${userId}`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 		});
-		console.log("Fetching avatar URL:", `https://v3.spb.ru/get_user_avatar?user_id=${userId}`);
+		console.log("Fetching avatar URL:", `https://v3.spb.ru/the_viper_room_avatar_request?user_id=${userId}`);
 		console.log("Avatar fetch server response status:", response.status);
 		if (!response.ok) {
 			throw new Error('Failed to fetch avatar');
